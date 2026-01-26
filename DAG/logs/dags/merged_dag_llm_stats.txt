@@ -1,0 +1,28 @@
+=== Merged DAG Statistics ===
+
+total_actions: 12
+total_edges: 9
+total_layers: 3
+max_parallelism: 5
+subtask_id: merged_llm
+
+=== Layer Information ===
+
+Layer 1 (parallelism: 5):
+  - subtask_1_0.0: OpenObject fridge1
+  - subtask_1_1.0: OpenObject fridge2
+  - subtask_2_0.0: PickupObject apple table1
+  - subtask_2_1.0: PickupObject banana table1
+  - subtask_2_2.0: SliceObject apple
+
+Layer 2 (parallelism: 5):
+  - subtask_1_2.0: StoreObject apple table1 fridge1
+  - subtask_1_3.0: StoreObject banana table1 fridge1
+  - subtask_1_4.0: StoreObject lettuce table1 fridge2
+  - subtask_2_3.0: PutObject apple table1
+  - subtask_2_4.0: PutObject banana table1
+
+Layer 3 (parallelism: 2):
+  - subtask_1_5.0: CloseObject fridge1
+  - subtask_1_6.0: CloseObject fridge2
+

@@ -1,0 +1,176 @@
+{
+  "subtask_id": "merged_llm",
+  "nodes": [
+    {
+      "id": "subtask_1_0.0",
+      "action_type": "OpenObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_1.0",
+      "action_type": "OpenObject",
+      "params": [
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_2.0",
+      "action_type": "StoreObject",
+      "params": [
+        "apple",
+        "table1",
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_3.0",
+      "action_type": "StoreObject",
+      "params": [
+        "banana",
+        "table1",
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_4.0",
+      "action_type": "StoreObject",
+      "params": [
+        "lettuce",
+        "table1",
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_5.0",
+      "action_type": "CloseObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_1_6.0",
+      "action_type": "CloseObject",
+      "params": [
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "subtask_2_0.0",
+      "action_type": "PickupObject",
+      "params": [
+        "apple",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "subtask_2_1.0",
+      "action_type": "PickupObject",
+      "params": [
+        "banana",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "subtask_2_2.0",
+      "action_type": "SliceObject",
+      "params": [
+        "apple"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "subtask_2_3.0",
+      "action_type": "PutObject",
+      "params": [
+        "apple",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "subtask_2_4.0",
+      "action_type": "PutObject",
+      "params": [
+        "banana",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    }
+  ],
+  "edges": [
+    {
+      "source": "subtask_1_0.0",
+      "target": "subtask_1_2.0"
+    },
+    {
+      "source": "subtask_1_0.0",
+      "target": "subtask_1_3.0"
+    },
+    {
+      "source": "subtask_1_1.0",
+      "target": "subtask_1_4.0"
+    },
+    {
+      "source": "subtask_1_2.0",
+      "target": "subtask_1_5.0"
+    },
+    {
+      "source": "subtask_1_3.0",
+      "target": "subtask_1_5.0"
+    },
+    {
+      "source": "subtask_1_4.0",
+      "target": "subtask_1_6.0"
+    },
+    {
+      "source": "subtask_2_0.0",
+      "target": "subtask_2_3.0"
+    },
+    {
+      "source": "subtask_2_2.0",
+      "target": "subtask_2_3.0"
+    },
+    {
+      "source": "subtask_2_1.0",
+      "target": "subtask_2_4.0"
+    }
+  ],
+  "layers": [
+    [
+      "subtask_1_0.0",
+      "subtask_1_1.0",
+      "subtask_2_0.0",
+      "subtask_2_1.0",
+      "subtask_2_2.0"
+    ],
+    [
+      "subtask_1_2.0",
+      "subtask_1_3.0",
+      "subtask_1_4.0",
+      "subtask_2_3.0",
+      "subtask_2_4.0"
+    ],
+    [
+      "subtask_1_5.0",
+      "subtask_1_6.0"
+    ]
+  ],
+  "statistics": {
+    "total_actions": 12,
+    "total_edges": 9,
+    "total_layers": 3,
+    "max_parallelism": 5,
+    "subtask_id": "merged_llm"
+  }
+}

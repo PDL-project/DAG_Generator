@@ -1,0 +1,5 @@
+0.0: PickupObject apple table1
+            1.0: PickupObject banana table1
+            2.0: SliceObject apple
+            3.0: PutObject apple table1
+            4.0: PutObject banana table1

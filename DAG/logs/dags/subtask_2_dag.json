@@ -1,0 +1,81 @@
+{
+  "subtask_id": "subtask_2",
+  "nodes": [
+    {
+      "id": "0.0",
+      "action_type": "PickupObject",
+      "params": [
+        "apple",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "1.0",
+      "action_type": "PickupObject",
+      "params": [
+        "banana",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "2.0",
+      "action_type": "SliceObject",
+      "params": [
+        "apple"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "3.0",
+      "action_type": "PutObject",
+      "params": [
+        "apple",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    },
+    {
+      "id": "4.0",
+      "action_type": "PutObject",
+      "params": [
+        "banana",
+        "table1"
+      ],
+      "subtask_id": "subtask_2"
+    }
+  ],
+  "edges": [
+    {
+      "source": "0.0",
+      "target": "3.0"
+    },
+    {
+      "source": "2.0",
+      "target": "3.0"
+    },
+    {
+      "source": "1.0",
+      "target": "4.0"
+    }
+  ],
+  "layers": [
+    [
+      "0.0",
+      "1.0",
+      "2.0"
+    ],
+    [
+      "3.0",
+      "4.0"
+    ]
+  ],
+  "statistics": {
+    "total_actions": 5,
+    "total_edges": 3,
+    "total_layers": 2,
+    "max_parallelism": 3,
+    "subtask_id": "subtask_2"
+  }
+}

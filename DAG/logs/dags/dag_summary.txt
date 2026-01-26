@@ -1,0 +1,34 @@
+==========================================
+       DAG Generation Summary Report      
+==========================================
+
+Total Subtasks Processed: 2
+
+--- Subtask 1 (subtask_1) ---
+  total_actions: 7
+  total_edges: 6
+  total_layers: 3
+  max_parallelism: 3
+  subtask_id: subtask_1
+
+--- Subtask 2 (subtask_2) ---
+  total_actions: 5
+  total_edges: 3
+  total_layers: 2
+  max_parallelism: 3
+  subtask_id: subtask_2
+
+--- Final Merged DAG ---
+  total_actions: 12
+  total_edges: 9
+  total_layers: 3
+  max_parallelism: 5
+  subtask_id: merged_llm
+
+[Critical Path / Layer Structure]
+  Layer 0: subtask_1_0.0, subtask_1_1.0, subtask_2_0.0, subtask_2_1.0, subtask_2_2.0
+  Layer 1: subtask_1_2.0, subtask_1_3.0, subtask_1_4.0, subtask_2_3.0, subtask_2_4.0
+  Layer 2: subtask_1_5.0, subtask_1_6.0
+
+==========================================
+Report Generated at: 2026-01-26 19:52:55

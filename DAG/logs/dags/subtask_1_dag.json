@@ -1,0 +1,115 @@
+{
+  "subtask_id": "subtask_1",
+  "nodes": [
+    {
+      "id": "0.0",
+      "action_type": "OpenObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "1.0",
+      "action_type": "OpenObject",
+      "params": [
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "2.0",
+      "action_type": "StoreObject",
+      "params": [
+        "apple",
+        "table1",
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "3.0",
+      "action_type": "StoreObject",
+      "params": [
+        "banana",
+        "table1",
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "4.0",
+      "action_type": "StoreObject",
+      "params": [
+        "lettuce",
+        "table1",
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "5.0",
+      "action_type": "CloseObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_1"
+    },
+    {
+      "id": "6.0",
+      "action_type": "CloseObject",
+      "params": [
+        "fridge2"
+      ],
+      "subtask_id": "subtask_1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "0.0",
+      "target": "2.0"
+    },
+    {
+      "source": "0.0",
+      "target": "3.0"
+    },
+    {
+      "source": "1.0",
+      "target": "4.0"
+    },
+    {
+      "source": "2.0",
+      "target": "5.0"
+    },
+    {
+      "source": "3.0",
+      "target": "5.0"
+    },
+    {
+      "source": "4.0",
+      "target": "6.0"
+    }
+  ],
+  "layers": [
+    [
+      "0.0",
+      "1.0"
+    ],
+    [
+      "2.0",
+      "3.0",
+      "4.0"
+    ],
+    [
+      "5.0",
+      "6.0"
+    ]
+  ],
+  "statistics": {
+    "total_actions": 7,
+    "total_edges": 6,
+    "total_layers": 3,
+    "max_parallelism": 3,
+    "subtask_id": "subtask_1"
+  }
+}

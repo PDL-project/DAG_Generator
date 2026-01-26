@@ -1,0 +1,7 @@
+0.0: OpenObject fridge1
+            1.0: OpenObject fridge2
+            2.0: StoreObject apple table1 fridge1
+            3.0: StoreObject banana table1 fridge1
+            4.0: StoreObject lettuce table1 fridge2
+            5.0: CloseObject fridge1
+            6.0: CloseObject fridge2
