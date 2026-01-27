@@ -6,9 +6,9 @@ Total Subtasks Processed: 2
 
 --- Subtask 1 (subtask_1) ---
   total_actions: 7
-  total_edges: 6
-  total_layers: 3
-  max_parallelism: 3
+  total_edges: 7
+  total_layers: 4
+  max_parallelism: 2
   subtask_id: subtask_1
 
 --- Subtask 2 (subtask_2) ---
@@ -19,16 +19,22 @@ Total Subtasks Processed: 2
   subtask_id: subtask_2
 
 --- Final Merged DAG ---
-  total_actions: 12
-  total_edges: 9
-  total_layers: 3
-  max_parallelism: 5
-  subtask_id: merged_llm
+  total_actions: 15
+  total_edges: 18
+  total_layers: 9
+  max_parallelism: 3
+  subtask_id: merged_hierarchical
 
 [Critical Path / Layer Structure]
-  Layer 0: subtask_1_0.0, subtask_1_1.0, subtask_2_0.0, subtask_2_1.0, subtask_2_2.0
-  Layer 1: subtask_1_2.0, subtask_1_3.0, subtask_1_4.0, subtask_2_3.0, subtask_2_4.0
-  Layer 2: subtask_1_5.0, subtask_1_6.0
+  Layer 0: GLOBAL_START
+  Layer 1: subtask_1_ROOT
+  Layer 2: subtask_1_0.0, subtask_1_1.0
+  Layer 3: subtask_1_2.0, subtask_1_4.0
+  Layer 4: subtask_1_3.0, subtask_1_6.0
+  Layer 5: subtask_1_5.0
+  Layer 6: subtask_2_ROOT
+  Layer 7: subtask_2_0.0, subtask_2_1.0, subtask_2_2.0
+  Layer 8: subtask_2_3.0, subtask_2_4.0
 
 ==========================================
-Report Generated at: 2026-01-26 19:52:55
+Report Generated at: 2026-01-26 20:58:26

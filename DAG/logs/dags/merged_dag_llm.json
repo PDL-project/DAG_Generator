@@ -1,6 +1,22 @@
 {
-  "subtask_id": "merged_llm",
+  "subtask_id": "merged_hierarchical",
   "nodes": [
+    {
+      "id": "GLOBAL_START",
+      "action_type": "System",
+      "params": [
+        "Start"
+      ],
+      "subtask_id": null
+    },
+    {
+      "id": "subtask_1_ROOT",
+      "action_type": "Subtask_Start",
+      "params": [
+        "subtask_1"
+      ],
+      "subtask_id": null
+    },
     {
       "id": "subtask_1_0.0",
       "action_type": "OpenObject",
@@ -64,6 +80,14 @@
       "subtask_id": "subtask_1"
     },
     {
+      "id": "subtask_2_ROOT",
+      "action_type": "Subtask_Start",
+      "params": [
+        "subtask_2"
+      ],
+      "subtask_id": null
+    },
+    {
       "id": "subtask_2_0.0",
       "action_type": "PickupObject",
       "params": [
@@ -110,11 +134,19 @@
   ],
   "edges": [
     {
+      "source": "GLOBAL_START",
+      "target": "subtask_1_ROOT"
+    },
+    {
       "source": "subtask_1_0.0",
       "target": "subtask_1_2.0"
     },
     {
       "source": "subtask_1_0.0",
+      "target": "subtask_1_3.0"
+    },
+    {
+      "source": "subtask_1_2.0",
       "target": "subtask_1_3.0"
     },
     {
@@ -134,6 +166,22 @@
       "target": "subtask_1_6.0"
     },
     {
+      "source": "subtask_1_ROOT",
+      "target": "subtask_1_0.0"
+    },
+    {
+      "source": "subtask_1_ROOT",
+      "target": "subtask_1_1.0"
+    },
+    {
+      "source": "GLOBAL_START",
+      "target": "subtask_2_ROOT"
+    },
+    {
+      "source": "subtask_1_5.0",
+      "target": "subtask_2_ROOT"
+    },
+    {
       "source": "subtask_2_0.0",
       "target": "subtask_2_3.0"
     },
@@ -144,33 +192,60 @@
     {
       "source": "subtask_2_1.0",
       "target": "subtask_2_4.0"
+    },
+    {
+      "source": "subtask_2_ROOT",
+      "target": "subtask_2_0.0"
+    },
+    {
+      "source": "subtask_2_ROOT",
+      "target": "subtask_2_1.0"
+    },
+    {
+      "source": "subtask_2_ROOT",
+      "target": "subtask_2_2.0"
     }
   ],
   "layers": [
     [
+      "GLOBAL_START"
+    ],
+    [
+      "subtask_1_ROOT"
+    ],
+    [
       "subtask_1_0.0",
-      "subtask_1_1.0",
+      "subtask_1_1.0"
+    ],
+    [
+      "subtask_1_2.0",
+      "subtask_1_4.0"
+    ],
+    [
+      "subtask_1_3.0",
+      "subtask_1_6.0"
+    ],
+    [
+      "subtask_1_5.0"
+    ],
+    [
+      "subtask_2_ROOT"
+    ],
+    [
       "subtask_2_0.0",
       "subtask_2_1.0",
       "subtask_2_2.0"
     ],
     [
-      "subtask_1_2.0",
-      "subtask_1_3.0",
-      "subtask_1_4.0",
       "subtask_2_3.0",
       "subtask_2_4.0"
-    ],
-    [
-      "subtask_1_5.0",
-      "subtask_1_6.0"
     ]
   ],
   "statistics": {
-    "total_actions": 12,
-    "total_edges": 9,
-    "total_layers": 3,
-    "max_parallelism": 5,
-    "subtask_id": "merged_llm"
+    "total_actions": 15,
+    "total_edges": 18,
+    "total_layers": 9,
+    "max_parallelism": 3,
+    "subtask_id": "merged_hierarchical"
   }
 }

@@ -74,6 +74,10 @@
       "target": "3.0"
     },
     {
+      "source": "2.0",
+      "target": "3.0"
+    },
+    {
       "source": "1.0",
       "target": "4.0"
     },
@@ -97,19 +101,21 @@
     ],
     [
       "2.0",
-      "3.0",
       "4.0"
     ],
     [
-      "5.0",
+      "3.0",
       "6.0"
+    ],
+    [
+      "5.0"
     ]
   ],
   "statistics": {
     "total_actions": 7,
-    "total_edges": 6,
-    "total_layers": 3,
-    "max_parallelism": 3,
+    "total_edges": 7,
+    "total_layers": 4,
+    "max_parallelism": 2,
     "subtask_id": "subtask_1"
   }
 }

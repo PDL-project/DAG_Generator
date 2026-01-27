@@ -448,74 +448,78 @@ class DAGMerger:
             raise ValueError(f"Unknown merge strategy: {merge_strategy}")
     
     def _merge_with_llm(self, dags: List[DAG]) -> DAG:
-        """LLM을 사용한 DAG 통합"""
-        print("Merging DAGs using LLM...")
+        """
+        각 Subtask마다 고유한 Root 노드를 생성하고,
+        통합 DAG는 이 Root들 사이의 선후 관계만 정의합니다.
+        """
+        print("Merging DAGs: One Root per Subtask Strategy")
         
-        merged = DAG(subtask_id='merged_llm')
+        merged = DAG(subtask_id='merged_hierarchical')
         
+        # 1. 전체 시스템의 시작점
+        global_start = PDDLAction(action_id="GLOBAL_START", action_type="System", params=["Start"])
+        merged.add_node(global_start)
+
+        subtask_root_ids = {} # {subtask_id: root_node_id}
+        subtask_exit_nodes = {} # {subtask_id: [last_nodes]}
+
         for dag in dags:
+            # 2. 각 Subtask를 대표하는 명시적 'Subtask Root' 생성
+            s_root_id = f"{dag.subtask_id}_ROOT"
+            s_root_action = PDDLAction(action_id=s_root_id, action_type="Subtask_Start", params=[dag.subtask_id])
+            merged.add_node(s_root_action)
+            subtask_root_ids[dag.subtask_id] = s_root_id
+            
+            # 기본적으로 모든 Subtask Root는 글로벌 스타트에 연결 (병렬 대기)
+            merged.add_edge("GLOBAL_START", s_root_id)
+
+            # 3. Subtask 내부 액션 및 의존성 복사
             for node_id, action in dag.nodes.items():
-                # 고유 식별자 생성 (예: subtask_1_0.0)
-                unique_id = f"{dag.subtask_id}_{node_id}"
-                
-                new_action = PDDLAction(
-                    action_id=unique_id, 
-                    action_type=action.action_type, 
-                    params=action.params, 
-                    subtask_id=dag.subtask_id
-                )
-                merged.add_node(new_action)
-                
-            # 기존 서브태스크 내부 엣지들도 고유 ID로 다시 연결
+                u_id = f"{dag.subtask_id}_{node_id}"
+                merged.add_node(PDDLAction(u_id, action.action_type, action.params, dag.subtask_id))
+            
             for target, sources in dag.edges.items():
-                for source in sources:
-                    merged.add_edge(f"{dag.subtask_id}_{source}", f"{dag.subtask_id}_{target}")
-        
-        subtask_summary = "\n\n".join([
-            f"Subtask {dag.subtask_id}:\n" + "\n".join([str(action) for action in dag.nodes.values()])
-            for dag in dags
-        ])
+                for src in sources:
+                    merged.add_edge(f"{dag.subtask_id}_{src}", f"{dag.subtask_id}_{target}")
 
-        prompt = f"""You are a specialized robot task coordinator.
-Analyze dependencies ONLY BETWEEN different subtasks. 
+            # 4. Subtask Root를 해당 Subtask의 첫 번째 액션들에 연결
+            if dag.layers:
+                for first_node in dag.layers[0]:
+                    merged.add_edge(s_root_id, f"{dag.subtask_id}_{first_node}")
+                
+                # 의존성 연결을 위해 마지막 노드들 보관
+                subtask_exit_nodes[dag.subtask_id] = [f"{dag.subtask_id}_{nid}" for nid in dag.layers[-1]]
 
-### CONTEXT:
-{subtask_summary}
+        # 5. LLM에게 Subtask Root 간의 의존성 질문
+        prompt = f"""Analyze dependencies between subtasks.
+Current Subtasks: {list(subtask_root_ids.keys())}
 
-### STRICT RULES:
-1. INTERNAL SEQUENCE PRESERVATION: Each subtask has its own fixed sequence (0.0 -> 1.0 -> 2.0). NEVER add or suggest dependencies between actions within the same subtask.
-2. INTER-SUBTASK ONLY: Only find constraints where an action in Subtask A must finish before an action in Subtask B can start.
-3. UNIQUE IDs: Use the full unique IDs (e.g., subtask_1_0.0) in your output.
+Rules:
+1. If Subtask B requires results from Subtask A, create a dependency.
+2. Dependencies must only be between Subtask names.
 
-Output ONLY JSON:
-{{
-  "inter_subtask_dependencies": [
-    {{
-      "source_action": "subtask_1_5.0", 
-      "target_action": "subtask_2_0.0", 
-      "reason": "Subtask 2 needs an item that was processed in Subtask 1"
-    }}
-  ]
-}}"""
+Output JSON:
+{{ "dependencies": [ {{ "from": "subtask_1", "to": "subtask_2" }} ] }}"""
 
         try:
-            for dep in inter_deps:
-                source = dep.get('source_action')
-                target = dep.get('target_action')
-                
-                if source and target and source in merged.nodes and target in merged.nodes:
-                    source_sub_id = merged.nodes[source].subtask_id
-                    target_sub_id = merged.nodes[target].subtask_id
-                    
-                    if source_sub_id != target_sub_id:
-                        merged.add_edge(source, target)
-                        print(f"  Added Inter-Subtask Edge: {source} -> {target}")
-                    else:
-                        print(f"  Ignored Intra-Subtask Edge: {source} -> {target} (Already handled)")
-                        
+            _, response = self.llm.query_model(prompt=prompt, temperature=0.2)
+            import json
+            deps = json.loads(re.search(r'\{.*\}', response, re.DOTALL).group(0)).get('dependencies', [])
+
+            # 6. Root 간 의존성 부여 (A의 종료 노드들 -> B의 Root 노드)
+            for dep in deps:
+                from_sub = dep.get('from')
+                to_sub = dep.get('to')
+
+                if from_sub in subtask_exit_nodes and to_sub in subtask_root_ids:
+                    target_root = subtask_root_ids[to_sub]
+                    for exit_node in subtask_exit_nodes[from_sub]:
+                        merged.add_edge(exit_node, target_root)
+                        print(f"  [Link] {from_sub} Complete -> {target_root} (Start)")
+                            
         except Exception as e:
-            print(f"LLM merge failed: {e}. Using parallel merge as fallback.")
-        
+            print(f"LLM Merge failed: {e}")
+
         merged.compute_layers()
         return merged
     

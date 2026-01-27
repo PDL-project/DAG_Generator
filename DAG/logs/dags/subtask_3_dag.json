@@ -1,0 +1,62 @@
+{
+  "subtask_id": "subtask_3",
+  "nodes": [
+    {
+      "id": "0.0",
+      "action_type": "OpenObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_3"
+    },
+    {
+      "id": "1.0",
+      "action_type": "PickupObject",
+      "params": [
+        "juice",
+        "fridge1"
+      ],
+      "subtask_id": "subtask_3"
+    },
+    {
+      "id": "2.0",
+      "action_type": "CloseObject",
+      "params": [
+        "fridge1"
+      ],
+      "subtask_id": "subtask_3"
+    }
+  ],
+  "edges": [
+    {
+      "source": "0.0",
+      "target": "1.0"
+    },
+    {
+      "source": "0.0",
+      "target": "2.0"
+    },
+    {
+      "source": "1.0",
+      "target": "2.0"
+    }
+  ],
+  "layers": [
+    [
+      "0.0"
+    ],
+    [
+      "1.0"
+    ],
+    [
+      "2.0"
+    ]
+  ],
+  "statistics": {
+    "total_actions": 3,
+    "total_edges": 3,
+    "total_layers": 3,
+    "max_parallelism": 1,
+    "subtask_id": "subtask_3"
+  }
+}

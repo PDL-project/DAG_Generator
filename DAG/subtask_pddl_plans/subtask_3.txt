@@ -1,0 +1,3 @@
+0.0: OpenObject fridge1
+1.0: PickupObject juice fridge1
+2.0: CloseObject fridge1
