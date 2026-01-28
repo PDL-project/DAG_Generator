@@ -192,23 +192,25 @@ class DAG:
         }
         
     def visualize(self, filename: str = None, title: str = None):
-        """통합된 모든 액션을 PNG에 표시"""
         G = nx.DiGraph()
-        
         for node_id, action in self.nodes.items():
-            # subtask 정보를 라벨에 포함하여 중복 액션 구분
-            label = f"[{action.subtask_id}]\n{node_id}: {action.action_type}"
+            label = f"[{action.subtask_id or 'System'}]\n{node_id.split('_')[-1]}: {action.action_type}"
             G.add_node(node_id, label=label)
             
         for target, sources in self.edges.items():
             for source in sources:
                 G.add_edge(source, target)
                 
-        # 레이어 기반 배치 설정
         pos = {}
+        placed_nodes = set()
         for layer_idx, layer in enumerate(self.layers):
             for node_idx, node_id in enumerate(layer):
                 pos[node_id] = (node_idx * 3, -layer_idx * 2)
+                placed_nodes.add(node_id)
+        
+        remaining_nodes = set(self.nodes.keys()) - placed_nodes
+        for i, node_id in enumerate(remaining_nodes):
+            pos[node_id] = (i * 3, 2)
                 
         plt.figure(figsize=(15, 10))
         
@@ -225,12 +227,12 @@ class DAG:
             plt.close()
 
 class PDDLParser:
-    """FastDownward 출력 파싱"""
+    """FastDownward 또는 커스텀 형식의 출력 파싱"""
     
     @staticmethod
     def parse_file(filepath: str, subtask_id: str = None) -> List[PDDLAction]:
         """PDDL 파일 파싱"""
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         return PDDLParser.parse_text(content, subtask_id)
     
@@ -240,18 +242,34 @@ class PDDLParser:
         actions = []
         lines = text.strip().split('\n')
         
-        for line in lines:
+        for i, line in enumerate(lines):
             line = line.strip()
             if not line:
                 continue
                 
-            match = re.match(r'^(\d+\.\d+):\s+(\w+)\s+(.+)$', line)
-            if match:
-                action_id, action_type, params_str = match.groups()
+            old_match = re.match(r'^(\d+\.\d+):\s+(\w+)\s+(.+)$', line)
+            new_match = re.match(r'^(\w+)\s+(.+?)\s*\((\d+)\)$', line)
+            
+            if old_match:
+                action_id, action_type, params_str = old_match.groups()
                 params = params_str.split()
                 actions.append(PDDLAction(action_id, action_type, params, subtask_id))
+            
+            elif new_match:
+                action_type, params_str, suffix_id = new_match.groups()
+                params = params_str.split()
+                action_id = f"{i}.0"
+                actions.append(PDDLAction(action_id, action_type, params, subtask_id))
+                
             else:
-                print(f"Warning: Could not parse line: {line}")
+                # 파라미터가 없는 액션일 경우
+                no_param_match = re.match(r'^(\w+)\s*\((\d+)\)$', line)
+                if no_param_match:
+                    action_type, suffix_id = no_param_match.groups()
+                    action_id = f"{i}.0"
+                    actions.append(PDDLAction(action_id, action_type, [], subtask_id))
+                else:
+                    print(f"Warning: Could not parse line: {line}")
                 
         return actions
 
@@ -283,6 +301,9 @@ Rules for dependency analysis:
 2. StoreObject/PutObject must be completed before CloseObject on that container
 3. PickupObject must be completed before PutObject for that object
 4. If an action modifies an object's state, subsequent actions on that object depend on it
+5. Maximize parallelism
+    - Actions involving table1 should not depend on actions for table2 at the same layer unless necessary
+    - Actions involving fridge1 should not depend on actions for fridge2 at the same layer unless necessary
 
 Output format (JSON only, no explanations):
 {{
@@ -456,24 +477,20 @@ class DAGMerger:
         
         merged = DAG(subtask_id='merged_hierarchical')
         
-        # 1. 전체 시스템의 시작점
         global_start = PDDLAction(action_id="GLOBAL_START", action_type="System", params=["Start"])
         merged.add_node(global_start)
 
-        subtask_root_ids = {} # {subtask_id: root_node_id}
-        subtask_exit_nodes = {} # {subtask_id: [last_nodes]}
+        subtask_root_ids = {}
+        subtask_exit_nodes = {}
 
         for dag in dags:
-            # 2. 각 Subtask를 대표하는 명시적 'Subtask Root' 생성
             s_root_id = f"{dag.subtask_id}_ROOT"
             s_root_action = PDDLAction(action_id=s_root_id, action_type="Subtask_Start", params=[dag.subtask_id])
             merged.add_node(s_root_action)
             subtask_root_ids[dag.subtask_id] = s_root_id
             
-            # 기본적으로 모든 Subtask Root는 글로벌 스타트에 연결 (병렬 대기)
             merged.add_edge("GLOBAL_START", s_root_id)
 
-            # 3. Subtask 내부 액션 및 의존성 복사
             for node_id, action in dag.nodes.items():
                 u_id = f"{dag.subtask_id}_{node_id}"
                 merged.add_node(PDDLAction(u_id, action.action_type, action.params, dag.subtask_id))
@@ -482,21 +499,22 @@ class DAGMerger:
                 for src in sources:
                     merged.add_edge(f"{dag.subtask_id}_{src}", f"{dag.subtask_id}_{target}")
 
-            # 4. Subtask Root를 해당 Subtask의 첫 번째 액션들에 연결
             if dag.layers:
                 for first_node in dag.layers[0]:
                     merged.add_edge(s_root_id, f"{dag.subtask_id}_{first_node}")
                 
-                # 의존성 연결을 위해 마지막 노드들 보관
                 subtask_exit_nodes[dag.subtask_id] = [f"{dag.subtask_id}_{nid}" for nid in dag.layers[-1]]
 
-        # 5. LLM에게 Subtask Root 간의 의존성 질문
+        # Subtask Root 간의 의존성 파악
         prompt = f"""Analyze dependencies between subtasks.
 Current Subtasks: {list(subtask_root_ids.keys())}
 
 Rules:
 1. If Subtask B requires results from Subtask A, create a dependency.
 2. Dependencies must only be between Subtask names.
+3. Maximize parallelism
+    - Actions involving table1 should not depend on actions for table2 at the same layer unless necessary
+    - Actions involving fridge1 should not depend on actions for fridge2 at the same layer unless necessary
 
 Output JSON:
 {{ "dependencies": [ {{ "from": "subtask_1", "to": "subtask_2" }} ] }}"""
@@ -506,7 +524,6 @@ Output JSON:
             import json
             deps = json.loads(re.search(r'\{.*\}', response, re.DOTALL).group(0)).get('dependencies', [])
 
-            # 6. Root 간 의존성 부여 (A의 종료 노드들 -> B의 Root 노드)
             for dep in deps:
                 from_sub = dep.get('from')
                 to_sub = dep.get('to')
@@ -769,20 +786,20 @@ def run_lamma_p_dag_pipeline():
     # 2. 고수준 명령어로부터 분해된 Subtask 플랜들 (FastDownward 결과 가정)
     sample_plans = {
         "subtask_1.txt": """
-            0.0: OpenObject fridge1
-            1.0: OpenObject fridge2
-            2.0: StoreObject apple table1 fridge1
-            3.0: StoreObject banana table1 fridge1
-            4.0: StoreObject lettuce table1 fridge2
-            5.0: CloseObject fridge1
-            6.0: CloseObject fridge2
+            OpenObject fridge1 (1)
+            OpenObject fridge2 (1)
+            StoreObject apple table1 fridge1 (1)
+            StoreObject banana table1 fridge1 (1)
+            StoreObject lettuce table1 fridge2 (1)
+            CloseObject fridge1 (1)
+            CloseObject fridge2 (1)
         """,
         "subtask_2.txt": """
-            0.0: PickupObject apple table1
-            1.0: PickupObject banana table1
-            2.0: SliceObject apple
-            3.0: PutObject apple table1
-            4.0: PutObject banana table1
+            PickupObject apple table1 (1)
+            PickupObject banana table1 (1)
+            SliceObject apple (1)
+            PutObject apple table1 (1)
+            PutObject banana table1 (1)
         """
     }
 
